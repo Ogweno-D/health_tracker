@@ -1,24 +1,40 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:health_tracker/components/my_button.dart';
 import 'package:health_tracker/components/my_textfield.dart';
+import 'package:health_tracker/helpers/helper_functions.dart';
 
 class LoginPage extends StatelessWidget {
-  
   final void Function()? onTap;
- 
-  LoginPage({super.key,
-  required this.onTap
-  });
+
+  LoginPage({super.key, required this.onTap});
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-
   @override
   Widget build(BuildContext context) {
+    void login() async {
+      //Show loading  circle
+      showDialog(
+          context: context,
+          builder: (context) => const Center(
+                child: CircularProgressIndicator(),
+              ));
 
-    void login(){
-
+      //Try Login
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: emailController.text, password: passwordController.text);
+        //Pop loading circle
+        if (context.mounted) Navigator.pop(context);
+      } //Catch any errors
+      on FirebaseAuthException catch (e) {
+        //Pop the loadinf circle
+        Navigator.pop(context);
+        displayMessageToUser(e.code, context);
+      }
     }
+
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         body: Center(
@@ -85,9 +101,11 @@ class LoginPage extends StatelessWidget {
                 //SigninButton
                 MyButton(text: "Login", onTap: login),
 
-              const SizedBox(height: 10,),
+                const SizedBox(
+                  height: 10,
+                ),
                 //Dont have an account?
-               Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text("Don't have an account?  "),
@@ -95,13 +113,10 @@ class LoginPage extends StatelessWidget {
                       onTap: onTap,
                       child: const Text(
                         "Register here",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold
-                        ),
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     )
-
-                    ],
+                  ],
                 )
               ],
             ),

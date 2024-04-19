@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:health_tracker/components/my_button.dart';
 import 'package:health_tracker/components/my_textfield.dart';
+import 'package:health_tracker/helpers/helper_functions.dart';
 
 class RegisterPage extends StatefulWidget {
   final void Function()? onTap;
@@ -13,26 +15,46 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController usernameController = TextEditingController();
-
   final TextEditingController emailController = TextEditingController();
-
   final TextEditingController passwordController = TextEditingController();
-
   final TextEditingController confirmPassController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    void registerUser() {
+    void registerUser() async {
       //show dialog
       showDialog(
           context: context,
           builder: (context) => const Center(
                 child: CircularProgressIndicator(),
-              )
-        ); 
+              ));
+      //Check if passwords match
+      if (passwordController.text != confirmPassController.text) {
+        //pop the loading circle
+        Navigator.pop(context);
 
-        //Check if passwords match
-      
+        //Display Error Message
+        displayMessageToUser("Passwords don't match", context);
+      }
+      //If the password match
+       else {
+        //Try creating a user
+        try {
+          UserCredential? userCredential = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(
+                  email: emailController.text,
+                  password: passwordController.text);
+
+          // Pop the loading circle
+          Navigator.pop(context);
+        } on FirebaseAuthException catch (e) {
+          //Pop the loadning circle
+          Navigator.pop(context);
+
+          //Display error message to User
+          displayMessageToUser(e.code, context);
+        }
+      }
     }
 
     return Scaffold(
